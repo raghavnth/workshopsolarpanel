@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solar Panel Monitoring</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Solar Panel Data</h1>
+  </header>
+
+  <div class="chart-container">
+    <canvas id="solarChart"></canvas>
+  </div>
+
+  <script>
+    const apiUrl = 'https://api.thingspeak.com/channels/2698468/feeds.json?api_key=RJ7Z6411BN0AW4AQ&results=10';
+
+    // Function to fetch data from ThingSpeak
+    async function fetchData() {
+      const response = await fetch(apiUrl);
+      const data = await response.json();
+      const feeds = data.feeds;
+
+      // Extract current and voltage data from the feeds
+      const timestamps = feeds.map(feed => feed.created_at);
+      const currentData = feeds.map(feed => parseFloat(feed.field1)); // Assuming field1 is voltage
+      const voltageData = feeds.map(feed => parseFloat(feed.field2)); // Assuming field2 is current
+
+      updateChart(timestamps, currentData, voltageData);
+    }
+
+    // Function to update the chart with new data
+    function updateChart(timestamps, currentData, voltageData) {
+      const ctx = document.getElementById('solarChart').getContext('2d');
+      const solarChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: timestamps,
+          datasets: [
+            {
+              label: 'Voltage (Volts)',
+              data: currentData,
+              borderColor: 'rgba(75, 192, 192, 1)',
+              borderWidth: 2,
+              fill: false
+            },
+            {
+              label: 'Current (Amps)',
+              data: voltageData,
+              borderColor: 'rgba(255, 99, 132, 1)',
+              borderWidth: 2,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true },
+            tooltip: { mode: 'index', intersect: false }
+          },
+          interaction: { mode: 'nearest', axis: 'x' },
+          scales: {
+            x: { display: true },
+            y: { display: true }
+          }
+        }
+      });
+    }
+
+    // Fetch and update the chart when the page loads
+    fetchData();
+  </script>
+</body>
+</html>

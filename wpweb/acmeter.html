@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AC Meter Data - Graphs</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header>
+    <h1>AC Meter Data - Current & Voltage</h1>
+  </header>
+
+  <div class="chart-container">
+    <canvas id="acMeterChart"></canvas>
+  </div>
+
+  <script>
+    const acApiUrl = 'https://api.thingspeak.com/channels/2699283/feeds.json?api_key=C5IPV7GISGX8E4WE&results=10';
+
+    async function fetchAcData() {
+      const response = await fetch(acApiUrl);
+      const data = await response.json();
+      const feeds = data.feeds;
+
+      // Extract timestamps, current, and voltage data
+      const timestamps = feeds.map(feed => feed.created_at);
+      const currentData = feeds.map(feed => parseFloat(feed.field1)); // Assuming field1 is current
+      const voltageData = feeds.map(feed => parseFloat(feed.field2)); // Assuming field2 is voltage
+
+      updateAcChart(timestamps, currentData, voltageData);
+    }
+
+    function updateAcChart(timestamps, currentData, voltageData) {
+      const ctx = document.getElementById('acMeterChart').getContext('2d');
+      const acMeterChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: timestamps,
+          datasets: [
+            {
+              label: 'Current (Amps)',
+              data: currentData,
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 2,
+              fill: false
+            },
+            {
+              label: 'Voltage (Volts)',
+              data: voltageData,
+              borderColor: 'rgba(255, 206, 86, 1)',
+              borderWidth: 2,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: true
+            }
+          },
+          scales: {
+            x: {
+              display: true,
+              title: {
+                display: true,
+                text: 'Timestamp'
+              }
+            },
+            y: {
+              display: true,
+              title: {
+                display: true,
+                text: 'Value'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Fetch data and update chart on page load
+    fetchAcData();
+  </script>
+</body>
+</html>
+
